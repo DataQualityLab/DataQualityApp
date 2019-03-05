@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">DQ evaluation</string>
+    <string name="blk_lst">Blacklisted Apps</string>
+    <string name="pDan">Potentially Dangerous Apps</string>
+    <string name="unknSrc">Unknown Sources</string>
+    <string name="appPerm">App Permissions</string>
+    <string name="osver">API Version</string>
+    <string name="patch">Security Patch Age</string>
+    <string name="devModel">Device Model Age</string>
+    <string name="bootldr">Bootloader Lock</string>
+    <string name="root">Root Access</string>
+    <string name="devMn">Developer Menu</string>
+    <string name="devLock">Device Lock</string>
+    <string name="trend">Historical Trend</string>
+    <string name="cmprsn">Same Device Comparison</string>
+    <string name="accr">Accuracy</string>
+    <string name="consist">Consistency</string>
+    <string name="noise">Noise</string>
+    <string name="timeRes">Time Resolution</string>
+    <string name="freshness">Freshness</string>
+    <string name="dq">Data Quality Score</string>
+    <string name="calc">CALCULATE</string>
+</resources>

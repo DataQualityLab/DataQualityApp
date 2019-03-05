@@ -1,4 +1,7 @@
 <resources>
+
+    <string name="api_key">AIzaSyA_dNwJ_Atw6j3B-BtFyzGINBs-jNM7flE</string>
+
     <string name="app_name">DQ evaluation</string>
     <string name="blk_lst">Blacklisted Apps</string>
     <string name="pDan">Potentially Dangerous Apps</string>

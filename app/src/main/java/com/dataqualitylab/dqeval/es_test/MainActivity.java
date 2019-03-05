@@ -1,18 +1,24 @@
 package com.dataqualitylab.dqeval.es_test;
 
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import com.igorkh.trustcheck.securitychecklibrary.CheckResults;
+import com.igorkh.trustcheck.securitychecklibrary.SecurityCheckLib;
+import com.igorkh.trustcheck.securitychecklibrary.SecurityLibResult;
 
 public class MainActivity extends AppCompatActivity {
 
     TextView tvResult;
     Button btnCalc;
     EditText eBlk, eDan, eunkn, ePerm, eOS, ePatch, eModel, eBtldr, eRoot, eDevmn, eLock, eTrend, eCmprsn, eAccr, eConsist, eNoise, eResol, eFreshness;
-
+    ProgressBar pg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,14 +46,23 @@ public class MainActivity extends AppCompatActivity {
         eNoise = (EditText)findViewById(R.id.eNoise);
         eResol = (EditText)findViewById(R.id.eResol);
         eFreshness = (EditText)findViewById(R.id.eFresh);
+        pg = (ProgressBar)findViewById(R.id.progressBar1);
 
+        pg.setVisibility(View.GONE);
+
+        int patchAge = HelperFunc.getSecPatchAge();
+        SecurityCheckLib secLib = SecurityCheckLib.getInstance();
+
+        int osversion = Build.VERSION.SDK_INT;
 
         eBlk.setText("0");
         eDan.setText("0");
         eunkn.setText("0");
         ePerm.setText("0.01");
-        eOS.setText("26");
-        ePatch.setText("2");
+//        eOS.setText("26");
+        eOS.setText(Integer.toString(osversion));
+//        ePatch.setText("2");
+        ePatch.setText(Integer.toString(patchAge));
         eModel.setText("5");
         eBtldr.setText("10");
         eRoot.setText("1");
@@ -61,7 +76,9 @@ public class MainActivity extends AppCompatActivity {
         eResol.setText("0.9");
         eFreshness.setText("0.9");
 
-        calculate();
+        getSecParameters();
+
+//        calculate();
 
         btnCalc.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -120,6 +137,52 @@ public class MainActivity extends AppCompatActivity {
 //
 ////        tv1.setText(Double.toString(testout) + "; Time = " + Double.toString(time));
 //        tvResult.setText(Double.toString(time));
+
+
+    }
+
+    void getSecParameters(){
+
+        final SecurityCheckLib securityLib = SecurityCheckLib.getInstance();
+        securityLib.setActivity(this);
+
+        final String API_KEY = getString(R.string.api_key);
+
+        SecurityLibResult compResultListener = new SecurityLibResult() {
+            @Override
+            public void onResultRecieved(CheckResults result) {
+                //label.setText(result.getJSONresult().toString());
+                pg.setVisibility(View.GONE);
+
+                eDan.setText(Integer.toString(result.isPha()? 1 : 0));
+                eunkn.setText(Integer.toString(result.isUnknsrc()? 1 : 0));
+
+                eBtldr.setText(Integer.toString(result.isAct()? 10 : 0));
+                eRoot.setText(Integer.toString(result.isBit()? 1 : 0));
+                eDevmn.setText(Integer.toString(result.isDevmenu()? 1 : 0));
+                eLock.setText(Integer.toString(result.isScreenlock()? 1 : 0));
+
+                calculate();
+
+
+            }
+
+            @Override
+            public void onBooleanCheckResult(Boolean result) {
+                int t=0;
+            }
+
+            @Override
+            public void onErrorOccured(String error) {
+                //label.setText(error);
+                pg.setVisibility(View.GONE);
+            }
+        };
+
+        pg.setVisibility(View.VISIBLE);
+
+        securityLib.comprehensiveCheck(API_KEY,compResultListener);
+
 
 
     }

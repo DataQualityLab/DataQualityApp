@@ -16,11 +16,15 @@
     <string name="devLock">Device Lock</string>
     <string name="trend">Historical Trend</string>
     <string name="cmprsn">Same Device Comparison</string>
-    <string name="accr">Accuracy</string>
+    <string name="accr">Correctness</string>
+    <string name="mindelay">Minimum Delay</string>
+    <string name="sensresol">Resolution</string>
+    <string name="maxrange">Max Range</string>
     <string name="consist">Consistency</string>
     <string name="noise">Noise</string>
     <string name="timeRes">Time Resolution</string>
     <string name="freshness">Freshness</string>
     <string name="dq">Data Quality Score</string>
     <string name="calc">CALCULATE</string>
+    <string name="btnNoise">Measure Noise</string>
 </resources>

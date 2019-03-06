@@ -1,24 +1,48 @@
 package com.dataqualitylab.dqeval.es_test;
 
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import android.hardware.SensorEventListener;
+
 import com.igorkh.trustcheck.securitychecklibrary.CheckResults;
 import com.igorkh.trustcheck.securitychecklibrary.SecurityCheckLib;
 import com.igorkh.trustcheck.securitychecklibrary.SecurityLibResult;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
 
     TextView tvResult;
-    Button btnCalc;
-    EditText eBlk, eDan, eunkn, ePerm, eOS, ePatch, eModel, eBtldr, eRoot, eDevmn, eLock, eTrend, eCmprsn, eAccr, eConsist, eNoise, eResol, eFreshness;
+    Button btnCalc, btnNoise;
+    EditText eBlk, eDan, eunkn, ePerm, eOS, ePatch, eModel, eBtldr, eRoot, eDevmn, eLock, eTrend, eCmprsn, eAccr, eConsist, eNoise, eResol, eFreshness,
+            eminDelay, eSenResol, eMaxRange;
     ProgressBar pg;
+
+    private SensorManager sensorManager;
+    private Sensor mSensor;
+
+    private long lastUpdate = 0;
+    private long startUpdate = 0;
+    private long DURATION = 500;
+    private float last_x=0, last_y=0, last_z=0;
+    private  double rmsNoise = 0;
+    long numMeasures = 0;
+
+    double NOISE_TRESH = 0.05;
+
+    SensorEventListener sensEvent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
         tvResult = (TextView)findViewById(R.id.tResult);
         btnCalc = (Button) findViewById(R.id.btnCalculate);
+        btnNoise = (Button) findViewById(R.id.btnNoise);
 
         eBlk = (EditText)findViewById(R.id.eBlckLst);
         eDan = (EditText)findViewById(R.id.epDan);
@@ -42,6 +67,9 @@ public class MainActivity extends AppCompatActivity {
         eTrend = (EditText)findViewById(R.id.eTrend);
         eCmprsn = (EditText)findViewById(R.id.eCmrsn);
         eAccr = (EditText)findViewById(R.id.eAccr);
+        eminDelay = (EditText)findViewById(R.id.eDelay);
+        eSenResol = (EditText)findViewById(R.id.eSenResol);
+        eMaxRange = (EditText)findViewById(R.id.eMaxRange);
         eConsist = (EditText)findViewById(R.id.eConsist);
         eNoise = (EditText)findViewById(R.id.eNoise);
         eResol = (EditText)findViewById(R.id.eResol);
@@ -76,7 +104,12 @@ public class MainActivity extends AppCompatActivity {
         eResol.setText("0.9");
         eFreshness.setText("0.9");
 
+        calcCorrectens();
+
+//        hideSoftKeyboard();
+
         getSecParameters();
+        measureNoise();
 
 //        calculate();
 
@@ -84,6 +117,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 calculate();
+            }
+        });
+
+        btnNoise.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                measureNoise();
             }
         });
 
@@ -139,6 +179,102 @@ public class MainActivity extends AppCompatActivity {
 //        tvResult.setText(Double.toString(time));
 
 
+    }
+
+    public void hideSoftKeyboard() {
+        if(getCurrentFocus()!=null) {
+            InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        }
+    }
+
+    void calcCorrectens(){
+
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mSensor = null;
+
+        if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null){
+            mSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+            int minDelay = mSensor.getMinDelay();
+            float maxRange = mSensor.getMaximumRange();
+            float senResol = mSensor.getResolution();
+
+            String smaxRange = Float.toString(maxRange);
+            String sSensResol = Float.toString(senResol);
+
+            eminDelay.setText(Integer.toString(minDelay));
+            eMaxRange.setText(smaxRange);
+            eSenResol.setText(sSensResol);
+        }
+
+
+    }
+
+    void measureNoise()
+    {
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        if (mSensor==null)
+            return;
+
+        last_x=0;
+        last_y=0;
+        last_z=0;
+        numMeasures=0;
+
+        SensorEventListener sensEvent = new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+
+                Sensor mySensor = event.sensor;
+
+                if (mySensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+                    last_x = last_x + event.values[0]*event.values[0];
+                    last_y = last_y + event.values[1]*event.values[1];
+                    last_z = last_z + event.values[2]*event.values[2];
+
+                    numMeasures = numMeasures+1;
+
+
+
+                    if (System.currentTimeMillis() - startUpdate > DURATION)
+                    {
+                        sensorManager.unregisterListener(this);
+                        double rmsX = Math.sqrt(last_x/numMeasures);
+                        double rmsY = Math.sqrt(last_y/numMeasures);
+                        double rmsZ = Math.sqrt(last_z/numMeasures);
+
+//                        rmsNoise = (rmsX+rmsY+rmsZ) / 3;
+                        rmsNoise = rmsY;
+
+                        double rmsNoisePercent = 1 - rmsNoise/NOISE_TRESH;
+                        if(rmsNoisePercent>1)
+                        {
+                            rmsNoisePercent = 1;
+                        }
+                        else if(rmsNoisePercent<0)
+                        {
+                            rmsNoisePercent = 0;
+                        }
+
+                        eNoise.setText(String.format( "%.2f", rmsNoisePercent ));
+//                        eNoise.setText(String.format( "%.2f", rmsNoise ));
+                    }
+
+
+                }
+
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+            }
+        };
+
+        startUpdate = System.currentTimeMillis();
+        sensorManager.registerListener(sensEvent, mSensor , SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     void getSecParameters(){
@@ -199,6 +335,11 @@ public class MainActivity extends AppCompatActivity {
 
         double result = FrameworkFunc.dqEvalNN(appIn, devSec, senSec, cldIn, corIn, freshness, true);
         tvResult.setText(String.format("%.2f", result));
+    }
+
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(sensEvent);
     }
 
 

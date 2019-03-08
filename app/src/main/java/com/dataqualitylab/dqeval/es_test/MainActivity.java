@@ -1,6 +1,7 @@
 package com.dataqualitylab.dqeval.es_test;
 
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
@@ -23,6 +24,8 @@ import com.igorkh.trustcheck.securitychecklibrary.SecurityLibResult;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+    static final int MEASURE_NOISE = 1;  // The request code
 
     TextView tvResult;
     Button btnCalc, btnNoise;
@@ -123,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         btnNoise.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                measureNoise();
+                measureNoiseNew();
             }
         });
 
@@ -209,6 +212,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+    }
+
+    void measureNoiseNew()
+    {
+        Intent intent = new Intent(this, NoiseActivity.class);
+        startActivityForResult(intent,MEASURE_NOISE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Check which request we're responding to
+        if (requestCode == MEASURE_NOISE) {
+            // Make sure the request was successful
+            if (resultCode == RESULT_OK) {
+                double result = data.getDoubleExtra(NoiseActivity.NOISE,0);
+                eNoise.setText(String.format( "%.2f", result ));
+            }
+        }
     }
 
     void measureNoise()

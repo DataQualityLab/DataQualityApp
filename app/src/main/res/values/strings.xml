@@ -27,4 +27,16 @@
     <string name="dq">Data Quality Score</string>
     <string name="calc">CALCULATE</string>
     <string name="btnNoise">Measure Noise</string>
+    <string name="title_activity_noise">NoiseActivity</string>
+    <string name="btnSave">Save</string>
+    <string name="btnCancel">Cancel</string>
+    <string name="btnStart">Start</string>
+    <string name="rbX">Axis X</string>
+    <string name="rbY">Axis Y</string>
+    <string name="rbZ">Axis Z</string>
+    <string name="rbAll">All axes Z</string>
+    <string name="swUse">Use it</string>
+    <string name="tvAccel">Accelerometer Sensor</string>
+    <string name="tvGyro">Gyroscope Sensor</string>
+
 </resources>
